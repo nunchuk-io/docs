@@ -15,11 +15,18 @@ Follow these steps:
 
     `gpg --keyserver keyserver.ubuntu.com --recv-keys 0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525`
 
-3. Verify the signature
+3. Verify the checksum
 
     `sha256sum --check SHA256SUMS.asc`
 
-The output should say "OK" if the signature is valid for the given file (if you only download the app for one OS, ignore the warnings for the other OSes).
+The output should say "OK" if the checksum is valid for the given file (if you only download the app for one OS, ignore the warnings for the other OSes).
+
+
+4. Verify the signature
+
+    `gpg --verify SHA256SUMS.asc`
+
+The output should say "Good signature" from our signer.
 
 ## Linux
 
