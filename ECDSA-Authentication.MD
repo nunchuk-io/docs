@@ -11,7 +11,7 @@
 
 # Authentication using ECDSA
 
-![Sequence Diagram](https:////www.plantuml.com/plantuml/png/lO_DIiGm58NtUOgpd84fnMqH6IWYiz71wivD9htMO7fJajlAlBrfTFnd41TsKK9oFixvrb5qaB5tgdQMM52SuULKeGwaXS3q1DiIYvNzXzJczMeR_9IUGuMBynkKsXW_ifJJIScU3QclkPbjn0VTqJlQw8cmEBIiChayb9qMnRSsLBYSGp_CRcp7Y6G22NgACHNXZdTx6D_lB6kndk7liSWjgpUtfT9ECdqxA8Nq7PFTNZMVRMC2Yt78uA-SwmSoZvOx6C-jdLV531-nhd1DSKX1Gg0uEb6ANAGyUiD_7MtvtqTpgzGw_SVUFGC0)
+![Sequence Diagram](ECDSA_authentication.png)
 
 ## 1. Create an identity
 
