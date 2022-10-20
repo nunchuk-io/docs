@@ -1,6 +1,40 @@
-# Matrix Nunchuk custom events
+# E2EE for distributed Bitcoin multisig transactions 
+This document specifies how Bitcoin transactions can be integrated into the [Matrix](https://matrix.org/) messaging system, thereby allowing its users to easily coordinate multisig transactions in an end-to-end-encrypted manner. 
 
-## Create Wallet
+Matrix is an open standard and communication protocol for real-time communication. Matrix has end-to-end-encryption support for both one-on-one and group chats, thanks to its [Olm and Megolm protocols](https://matrix.org/docs/guides/end-to-end-encryption-implementation-guide).
+
+Matrix clients that follow the same schema can construct Bitcoin transactions across different Matrix federations.
+
+The schema is currently used in all [Nunchuk applications](https://nunchuk.io).
+
+## API
+See https://github.com/nunchuk-io/libnunchuk/blob/main/include/nunchukmatrix.h.
+
+## Data structures
+- Bitcoin wallet configurations are stored in the [BSMS format](https://github.com/bitcoin/bips/blob/master/bip-0129.mediawiki). 
+- Bitcoin transactions are stored in the [PSBT format](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki).
+- PSBTs, in turn, are embedded within the [Matrix custom event types](https://spec.matrix.org/v1.4/client-server-api/#types-of-room-events) defined below.
+
+## Workflows
+There are 2 main flows:
+- Wallet creation
+  - Initialize wallet creation session
+  - Join wallet creation session
+  - Leave/cancel wallet creation session
+  - Finalize wallet creation
+
+- Transaction creation
+  - Initialize transaction
+  - Cancel or Sign transaction (repeated until enough signatures have been collected)
+  - Broadcast transaction 
+
+## Matrix notes
+- If the Matrix room is E2EE-enabled, all Bitcoin wallet and transaction events will also be end-to-end-encrypted.
+- [`m.relates_to`](https://spec.matrix.org/v1.4/client-server-api/#forming-relationships-between-events) is used to establish a sequential list of events for each workflow.
+- Matrix limits the event size to be <= 64kB (65536 bytes). This works for the majority of PSBTs, but not all.
+- For extremely large PSBTs (such as Bitcoin transactions with lots of inputs and/or outputs), the PSBTs need to be converted to binary files and [upload to the Matrix room](https://spec.matrix.org/unstable/client-server-api/#post_matrixmediav3upload).
+
+## Wallet creation
 ### Init wallet
 - Room ID: !DPZjhLvVqrnlOtrqAy:matrix.org
 - Event ID: $5NCjFf5HI6yVlgBhBHo2_qAqTZWs6MXKJh3QUPc9AsA
@@ -19,9 +53,9 @@
         "m": 2,
         "n": 3,
         "address_type": "NATIVE_SEGWIT", // LEGACY, NESTED_SEGWIT or NATIVE_SEGWIT (default NATIVE_SEGWIT)
-        // (?) maybe replace address_type by script_format (P2WSH, P2WSH-P2SH, P2SH)
+        // address_type could be replaced with script_format (P2WSH, P2WSH-P2SH, P2SH)
         "is_escrow": false,
-        "member": [], // Key whitelist (if not empty, join event key must belong to member list)
+        "member": [], // Optional key whitelisting (if not empty, join event key must belong to this list)
         "chain": "MAIN", // MAIN, TESTNET or REGTEST (default MAIN)
         "bsms": "BSMS 1.0 ..."
     }
@@ -44,7 +78,7 @@
     "body": {
         "key": "[1cf0bf7e/48'/0'/0'/2']xpub6FL8FhxNNUVnG64YurPd16AfGyvFLhh7S2uSsDqR3Qfcm6o9jtcMYwh6DvmcBF9qozxNQmTCVvWtxLpKTnhVLN3Pgnu2D3pAoXYFgVyd8Yz", // KEY format follow https://github.com/bitcoin/bips/blob/master/bip-0129.mediawiki#signer-1
         // If init_event.content.body.member != [], member must include key
-        "type": "HARDWARE", // HARDWARE, SOFTWARE, AIRGAP or FOREIGN_SOFTWARE
+        "type": "HARDWARE", // NFC, HARDWARE, AIRGAP, SOFTWARE or FOREIGN_SOFTWARE
         "io.nunchuk.relates_to": {
             "init_event": {
               "room_id": "!DPZjhLvVqrnlOtrqAy:matrix.org",
@@ -301,7 +335,7 @@
 }
 ```
 
-## Create Transaction
+## Transaction creation
 ### Init transaction
 - Room ID: !DPZjhLvVqrnlOtrqAy:matrix.org
 - Event ID: $5NCjFf5HI6yVlgBhBHo2_qAqTZWs6MXKJh3QUPc9AsA
@@ -320,7 +354,7 @@
         "psbt": "unsigned PSBT encoded in base64",
         "fee_rate": 1,
         "subtract_fee_from_amount": false,
-        "chain": "MAIN", // MAIN, TESTNET or REGTEST (default MAIN)
+        "chain": "MAIN", // MAIN, TESTNET or REGTEST (default is MAIN)
     }
   }
 }
@@ -496,36 +530,4 @@
 }
 ```
 
-## Synchronize Multiple Device
-### Backup
-- Room ID: <special sync room>
-- Event ID: $5NCjFf5HI6yVlgBhBHo2_qAqTZWs6MXKJh3QUPc9AsA
-- Sender: @olvaus:nunchuk.io
-
-```json
-{
-  "room_id": "!DPZjhLvVqrnlOtrqAy:matrix.org",
-  "type": "io.nunchuk.sync",
-  "content": {
-    "msgtype": "io.nunchuk.sync.file",
-    "v": 1,
-    "file": {
-        "v": "v2",
-        "key": {
-            "alg": "A256CTR",
-            "ext": true,
-            "k": "key encoded in base64",
-            "key_ops": ["encrypt", "decrypt"],
-            "kty": "oct"
-        },
-        "iv": "iv encoded in base64",
-        "url": "",
-        "mimetype": "application/octet-stream",
-        "hashes": {
-            "sha256": "sha256 encoded in base64"
-        }
-    }
-  }
-}
-```
  
