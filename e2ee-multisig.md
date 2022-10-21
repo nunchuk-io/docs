@@ -1,9 +1,9 @@
-# E2EE for distributed Bitcoin multisig transactions 
-This document specifies how Bitcoin transactions can be integrated into the [Matrix](https://matrix.org/) messaging system, which makes it possible to coordinate multisig transactions in an end-to-end-encrypted manner. 
+# E2EE for multi-party multisig in Bitcoin
+This document specifies how multi-party multisig in Bitcoin can be facilitated using [Matrix](https://matrix.org/). 
 
-Matrix is an open standard and communication protocol for real-time communication. Matrix supports end-to-end-encryption (E2EE) for both one-on-one and group chats, thanks to its [Olm and Megolm protocols](https://matrix.org/docs/guides/end-to-end-encryption-implementation-guide).
+Matrix is an open standard and communication protocol for real-time communication. Matrix supports end-to-end-encryption (E2EE) for one-on-one and group chats, thanks to its [Olm and Megolm protocols](https://matrix.org/docs/guides/end-to-end-encryption-implementation-guide).
 
-Matrix clients that follow the same schema can construct Bitcoin transactions across different Matrix federations.
+Matrix clients that follow the below schema can construct Bitcoin transactions across different Matrix federations.
 
 The schema is currently used in all [Nunchuk applications](https://nunchuk.io).
 
