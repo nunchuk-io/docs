@@ -32,7 +32,7 @@ There are 2 main flows:
 - If the Matrix room is E2EE-enabled, all Bitcoin wallet and transaction events will also be end-to-end-encrypted.
 - [`m.relates_to`](https://spec.matrix.org/v1.4/client-server-api/#forming-relationships-between-events) is used to establish the relationship graph of events for each workflow.
 - Matrix limits the event size to be [<= 64kB (65536 bytes)](https://spec.matrix.org/v1.4/client-server-api/#size-limits). This works for the majority of PSBTs, but not all.
-- For extremely large PSBTs (such as Bitcoin transactions with lots of inputs and/or outputs), the PSBTs need to be converted to binary files and [upload to the Matrix room](https://spec.matrix.org/unstable/client-server-api/#post_matrixmediav3upload).
+- For extremely large PSBTs (such as Bitcoin transactions with lots of inputs and/or outputs), the PSBTs need to be converted to media files and [upload to the Matrix room](https://spec.matrix.org/unstable/client-server-api/#post_matrixmediav3upload).
 
 ## Wallet creation (or recovery)
 ### Init wallet
