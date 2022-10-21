@@ -17,7 +17,7 @@ See https://github.com/nunchuk-io/libnunchuk/blob/main/include/nunchukmatrix.h.
 
 ## Workflows
 There are 2 main flows:
-- Wallet creation
+- Wallet creation (or recovery)
   - Initialize wallet creation/recovery session
   - Join wallet session
   - Leave/cancel wallet session
