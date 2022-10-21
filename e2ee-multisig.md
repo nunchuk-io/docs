@@ -1,5 +1,5 @@
 # E2EE for distributed Bitcoin multisig transactions 
-This document specifies how Bitcoin transactions can be integrated into the [Matrix](https://matrix.org/) messaging system, thereby allowing its users to easily coordinate multisig transactions in an end-to-end-encrypted manner. 
+This document specifies how Bitcoin transactions can be integrated into the [Matrix](https://matrix.org/) messaging system, which makes it possible to coordinate multisig transactions in an end-to-end-encrypted manner. 
 
 Matrix is an open standard and communication protocol for real-time communication. Matrix has end-to-end-encryption support for both one-on-one and group chats, thanks to its [Olm and Megolm protocols](https://matrix.org/docs/guides/end-to-end-encryption-implementation-guide).
 
@@ -18,10 +18,10 @@ See https://github.com/nunchuk-io/libnunchuk/blob/main/include/nunchukmatrix.h.
 ## Workflows
 There are 2 main flows:
 - Wallet creation
-  - Initialize wallet creation session
-  - Join wallet creation session
-  - Leave/cancel wallet creation session
-  - Finalize wallet creation
+  - Initialize wallet creation/recovery session
+  - Join wallet session
+  - Leave/cancel wallet session
+  - Finalize wallet
 
 - Transaction creation
   - Initialize transaction
@@ -34,7 +34,7 @@ There are 2 main flows:
 - Matrix limits the event size to be <= 64kB (65536 bytes). This works for the majority of PSBTs, but not all.
 - For extremely large PSBTs (such as Bitcoin transactions with lots of inputs and/or outputs), the PSBTs need to be converted to binary files and [upload to the Matrix room](https://spec.matrix.org/unstable/client-server-api/#post_matrixmediav3upload).
 
-## Wallet creation
+## Wallet creation (or recovery)
 ### Init wallet
 - Room ID: !DPZjhLvVqrnlOtrqAy:matrix.org
 - Event ID: $5NCjFf5HI6yVlgBhBHo2_qAqTZWs6MXKJh3QUPc9AsA
