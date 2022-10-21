@@ -1,5 +1,5 @@
 # E2EE for multi-party multisig in Bitcoin
-This document specifies how multi-party multisig in Bitcoin can be facilitated using [Matrix](https://matrix.org/). 
+This document describes how multi-party multisig in Bitcoin can be facilitated using [Matrix](https://matrix.org/). 
 
 Matrix is an open standard and communication protocol for real-time communication. Matrix supports end-to-end-encryption (E2EE) for one-on-one and group chats, thanks to its [Olm and Megolm protocols](https://matrix.org/docs/guides/end-to-end-encryption-implementation-guide).
 
