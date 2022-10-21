@@ -11,7 +11,7 @@ The schema is currently used in all [Nunchuk applications](https://nunchuk.io).
 See https://github.com/nunchuk-io/libnunchuk/blob/main/include/nunchukmatrix.h.
 
 ## Data structures
-- Bitcoin wallet configurations are stored in the [BSMS format](https://github.com/bitcoin/bips/blob/master/bip-0129.mediawiki). 
+- Bitcoin wallet configurations are stored in the [BSMS format](https://github.com/bitcoin/bips/blob/master/bip-0129.mediawiki) (which was built on top of [Output Descriptors](https://bitcoinops.org/en/topics/output-script-descriptors/)). 
 - Bitcoin transactions are stored in the [PSBT format](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki).
 - PSBTs, in turn, are embedded within the [Matrix custom event types](https://spec.matrix.org/v1.4/client-server-api/#types-of-room-events) defined below.
 
