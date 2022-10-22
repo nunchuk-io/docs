@@ -7,6 +7,8 @@ Matrix clients that follow the below schema can construct Bitcoin transactions a
 
 The schema is currently used in all [Nunchuk applications](https://nunchuk.io).
 
+If you have any questions, please email support@nunchuk.io or join [our Slack](https://join.slack.com/t/nunchukio/shared_invite/zt-xqdlvl5g-xKKohQu_R7IUo7_np8rVaw).
+
 ## API
 See https://github.com/nunchuk-io/libnunchuk/blob/main/include/nunchukmatrix.h.
 
