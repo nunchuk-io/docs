@@ -13,9 +13,9 @@ Primary Key accounts are one of Nunchuk's authentication mechanisms. It uses one
 
 # Background
 Email logins have been highly useful as part of an overall Internet architecture for various reasons:
-- Email accounts allow easy correspondence between the users and the service provider, including critical security updates
-- Certain types of content and services are better served using email
-- Emails represent digital capital (a form of Proof-of-Work) and can act as a natural 2FA against hacking and spamming
+- Email accounts allow easy correspondence between the users and the service provider, including critical security updates.
+- Certain types of content and services are better served using email.
+- Emails represent digital capital (a form of Proof-of-Work) and can act as a natural 2FA against hacking and spamming.
 
 Nevertheless, email address data have been frequently targeted, leaked and exploited over the years, especially when service providers have little to no security systems in place.
 
@@ -58,13 +58,13 @@ Primary Key accounts are our solution to that. It uses public-key cryptography a
         "signature": "${signature}"
     }
 
-    # Response really depends on the server implementation. But usually, it's a access_token, token type and expiration time.
+    # Response really depends on the server implementation. But usually, it includes an access_token, token type and expiration time.
     < {"access_token": "thisisanaccess_token", "token_type": "Bearer", "expires_in": 3600}
 
 ### 4.2 Sign-in
 
-1. Server check where (identity, username) is in the database
-2. Verify signature
+1. Server looks up where (identity, username) is located in the database
+2. Verify the signature
 
    ```
    > POST /account/v1/sign-up
@@ -75,6 +75,6 @@ Primary Key accounts are our solution to that. It uses public-key cryptography a
        "signature": "${signature}"
    }
 
-   # Response really depends on the server implementation. But usually, it's a access_token, token type and expiration time.
+   # Response really depends on the server implementation. But usually, it includes an access_token, token type and expiration time.
    < {"access_token": "thisisanaccess_token", "token_type": "Bearer", "expires_in": 3600}
    ```   
