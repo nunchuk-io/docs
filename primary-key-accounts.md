@@ -21,6 +21,8 @@ Nevertheless, email address data have been frequently targeted, leaked and explo
 
 Primary Key accounts are our solution to that. It uses public-key cryptography and leverages Bitcoin's native ECDSA protocol (it can be updated to Schnorr later) to provide an alternative authentication mechanism.
 
+If you have any questions, please email support@nunchuk.io or join our Slack.
+
 # Authentication using ECDSA
 
 ![Sequence Diagram](ECDSA_authentication.png)
