@@ -1,4 +1,5 @@
-- [Preface](#preface)
+- [Introduction](#primary-key-accounts)
+- [Background](#background)
 - [Authentication using ECDSA](#authentication-using-ecdsa)
     - [1. Create an identity](#1-create-an-identity)
     - [2. Create a nonce](#2-create-a-nonce)
@@ -7,7 +8,18 @@
         - [4.1 Sign-up](#41-sign-up)
         - [4.2 Sign-in](#42-sign-in)
 
-# Preface
+# Primary Key accounts
+Primary Key accounts are one of Nunchuk's authentication mechanisms. It uses one of your Bitcoin public-private key pairs to replace the usual username/password for logging in.
+
+# Background
+Email logins have been highly useful as part of an overall Internet architecture for various reasons:
+- Email accounts allow easy correspondence between the users and the service provider, including critical security updates
+- Certain types of content and services are better served using email
+- Emails represent digital capital (a form of Proof-of-Work) and can act as a natural 2FA against hacking and spamming
+
+Nevertheless, email address data have been frequently targeted, leaked and exploited over the years, especially when service providers have little to no security systems in place.
+
+Primary Key accounts are our solution to that. It uses public-key cryptography and leverages Bitcoin's native ECDSA protocol (it can be updated to Schnorr later) to provide an alternative authentication mechanism.
 
 # Authentication using ECDSA
 
