@@ -9,17 +9,19 @@
         - [4.2 Sign-in](#42-sign-in)
 
 # Primary Key accounts
-Primary Key accounts are one of Nunchuk's authentication mechanisms. It uses one of your Bitcoin public-private key pairs to replace the usual username/password for logging in.
+Primary Key accounts are one of Nunchuk's authentication mechanisms. It replaces the usual username/password login with one of your Bitcoin public-private key pairs.
+
+Primary Key accounts are built on Bitcoin Core's [`MessageSign()`](https://github.com/bitcoin/bitcoin/blob/07f2c25d04c39a0074e1d9ee1b24b3e359c8153f/src/util/message.h#L64) API.
 
 # Background
-Email logins have been highly useful as part of an overall Internet architecture for various reasons:
-- Email accounts allow easy correspondence between the users and the service provider, including critical security updates.
+Email logins have been highly popular as part of an overall Internet architecture for various reasons:
+- Email accounts allow for easy correspondence between the users and the service provider, including critical security updates.
 - Certain types of content and services are better served using email.
-- Emails represent digital capital (a form of Proof-of-Work) and can act as a natural 2FA against hacking and spamming.
+- Emails represent digital capital (a form of Proof-of-Work) and can act as a natural 2FA against hacking and spam.
 
 Nevertheless, email address data have been frequently targeted, leaked and exploited over the years, especially when service providers have little to no security systems in place.
 
-Primary Key accounts are our solution to that. It uses public-key cryptography and leverages Bitcoin's native ECDSA protocol (it can be updated to Schnorr later) to provide an alternative authentication mechanism.
+Primary Key accounts are our solution to that. It uses public-key cryptography and leverages Bitcoin's native ECDSA signature (it can be updated to Schnorr later) to provide an alternative authentication mechanism.
 
 If you have any feedback or questions, please email support@nunchuk.io or join our Slack.
 
