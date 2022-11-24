@@ -4,7 +4,7 @@
 
 [Release key](https://keyserver.ubuntu.com/pks/lookup?search=0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525&fingerprint=on&op=index)
 
-[Release signatures](https://nunchuk-downloads.s3.ap-southeast-1.amazonaws.com/v1.9.13/SHA256SUMS.asc)
+[Release signatures](https://nunchuk-downloads.s3.ap-southeast-1.amazonaws.com/v1.9.14/SHA256SUMS.asc)
 
 ## Verifying builds
 
