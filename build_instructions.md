@@ -4,7 +4,7 @@
 
 [Release key](https://keyserver.ubuntu.com/pks/lookup?search=0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525&fingerprint=on&op=index)
 
-Get the signatures for each release at https://github.com/nunchuk-io/nunchuk-desktop/releases
+Release signatures are attached to each release at https://github.com/nunchuk-io/nunchuk-desktop/releases.
 
 ## Verifying builds
 
