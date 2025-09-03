@@ -21,8 +21,8 @@ Follow these steps:
 
 The output should say "OK" if the checksum is valid for the given file (if you only download the app for one OS, ignore the warnings for the other OSes).
 
-If you are on Windows, run:
-
+- If you are on Windows, run:
+    
     `certUtil -hashfile <downloaded zip file> SHA256`
 
 The output should be the file hash in SHA256SUMS.asc 
