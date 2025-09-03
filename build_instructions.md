@@ -19,6 +19,10 @@ Follow these steps:
 
     `sha256sum --check SHA256SUMS.asc`
 
+If you are on Windows, run:
+
+    `certUtil -hashfile SHA256SUMS.asc SHA256`
+
 The output should say "OK" if the checksum is valid for the given file (if you only download the app for one OS, ignore the warnings for the other OSes).
 
 
