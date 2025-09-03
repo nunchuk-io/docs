@@ -18,8 +18,8 @@ Follow these steps:
 3. Verify the checksum
 
     `sha256sum --check SHA256SUMS.asc`
-
-If you are on Windows, run:
+   
+   If you are on Windows, run:
 
     `certUtil -hashfile SHA256SUMS.asc SHA256`
 
