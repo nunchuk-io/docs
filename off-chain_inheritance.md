@@ -3,7 +3,7 @@
 ## Hardware Wallet Integration Specification
 
 **Status:** Draft  
-**Doc version:** 0.1  
+**Doc version:** 0.2  
 **Audience:** Hardware wallet / signer manufacturers and engineering teams
 
 The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
@@ -12,21 +12,17 @@ The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** in
 
 ## 1. Purpose
 
-Nunchuk provides an inheritance mechanism for multisig Bitcoin wallets.
+Nunchuk supports inheritance for multisig Bitcoin wallets via a designated **Inheritance Key**. Nunchuk MUST NOT receive the plaintext private key.
 
-For the inheritance path, Nunchuk needs the beneficiary to eventually recover a designated **Inheritance Key**. However, Nunchuk must never have access to the plaintext private key.
+Instead, the hardware wallet produces an **on-device encrypted backup**. Nunchuk stores only the ciphertext. The **Backup Password** stays outside Nunchuk and is delivered to the beneficiary separately.
 
-We therefore use a **hardware-generated encrypted backup**:
-
-> The hardware wallet encrypts the Inheritance Key backup locally. Nunchuk stores only the encrypted backup. The Backup Password remains outside Nunchuk and is delivered to the beneficiary separately.
-
-This document defines the hardware-wallet capability required to integrate with this inheritance flow.
+This document specifies the hardware-wallet behavior needed to integrate with that flow.
 
 ---
 
-## 2. Why an Encrypted Backup Is Needed
+## 2. Motivation and Security Model
 
-A normal multisig wallet may have several signing keys:
+Example wallet:
 
 ```text
 2-of-4 Multisig
@@ -37,283 +33,112 @@ Key C ─ Inheritance Key
 Key D ─ Nunchuk Platform Key
 ```
 
-During normal operation, the Inheritance Key is not required.
+Normal spending does not need the Inheritance Key. On inheritance, the beneficiary needs it (together with the Platform Key) to satisfy the multisig — but may not have the original hardware device. A recoverable backup is therefore required.
 
-When inheritance is triggered, the beneficiary needs access to the Inheritance Key:
-
-```text
-Inheritance Key + Platform Key
-             ↓
-       satisfy multisig
-             ↓
-       spend the wallet
-```
-
-The problem is that the beneficiary may not physically possess the hardware device that holds the Inheritance Key.
-
-We therefore need a recoverable backup of that key.
-
-However:
-
-### Nunchuk must not receive the private key.
-
-If Nunchuk received the plaintext private key, compromising Nunchuk's infrastructure could compromise every inheritance plan using the service.
-
-Instead:
+If Nunchuk ever handled the plaintext key, a Nunchuk compromise would put every inheritance plan at risk. Encryption MUST happen on the hardware wallet:
 
 ```text
-Hardware Wallet
-      │
-      │ encrypt locally
-      ▼
-Encrypted Backup
-      │
-      ▼
-   Nunchuk
+Hardware Wallet ──encrypt locally──► Encrypted Backup ──► Nunchuk
+Backup Password ─────────────────────────────────────► Beneficiary
 ```
 
-The decryption secret remains separate:
+### Responsibilities
 
-```text
-Backup Password
-      │
-      ▼
-Beneficiary
-```
+| Party | Responsibility |
+| --- | --- |
+| **Hardware wallet** | Generate/import Inheritance Key; generate Backup Password; encrypt backup; never export plaintext during backup creation |
+| **Nunchuk** | Store ciphertext; bind it to a plan; gate claims; guide the beneficiary; co-sign with the Platform Key when eligible |
+| **Beneficiary** | Obtain Backup Password; claim; decrypt locally; sign with the recovered Inheritance Key |
 
-Therefore, a database compromise at Nunchuk does not reveal the inheritance private keys.
+### Security boundary
+
+Nunchuk MUST NOT receive: Inheritance private key, seed containing that key, Backup Password, encryption key, or plaintext backup.
+
+Nunchuk SHOULD receive only: encrypted backup, backup metadata, and public key / fingerprint.
+
+> Even if Nunchuk's inheritance-backup database is fully compromised, the Inheritance Key remains unrecoverable without the separately held Backup Password.
 
 ---
 
-## 3. Trust Model
+## 3. User Flows
 
-The hardware wallet is the trusted environment for generating and protecting the private key.
+### 3.1 Owner setup
 
-### Hardware wallet is responsible for
+```text
+Owner → creates plan in Nunchuk → selects HW as Inheritance Key
+         ↓
+Hardware Wallet → holds Inheritance Key
+                → generates Backup Password
+                → creates encrypted backup
+         ↓
+Encrypted Backup → Nunchuk (ciphertext only)
 
-- generating/importing the Inheritance Key;
-- generating the Backup Password;
-- encrypting the backup;
-- ensuring the plaintext private key does not leave the device during backup creation.
+Backup Password → Beneficiary / Trustee (out of band)
+```
 
-### Nunchuk is responsible for
+### 3.2 Claim
 
-- storing the encrypted backup;
-- associating the backup with an inheritance plan;
-- determining when an inheritance claim becomes eligible;
-- guiding the beneficiary through the claim process;
-- providing the Platform Key signature when policy conditions are satisfied.
+```text
+Beneficiary → Magic Phrase / inheritance identifier → Nunchuk
+Nunchuk → verifies eligibility → returns Encrypted Backup
+Beneficiary → decrypts locally with Backup Password
+            → recovers Inheritance Key → signs TX
+Nunchuk Platform Key co-signs → multisig satisfied → Bitcoin
+```
 
-### Beneficiary is responsible for
-
-- obtaining the Backup Password;
-- initiating the inheritance claim;
-- decrypting/recovering the backup;
-- using the recovered Inheritance Key to sign the transaction.
+The Backup Password MUST NOT be sent to Nunchuk at any point.
 
 ---
 
-## 4. Security Boundary
+## 4. Required Hardware Capability
 
-The following information MUST NOT be provided to Nunchuk:
-
-```text
-Inheritance private key
-Seed phrase containing the Inheritance Key
-Backup Password
-Encryption key
-Plaintext backup
-```
-
-Nunchuk SHOULD receive only:
-
-```text
-Encrypted backup
-Backup metadata
-Public key / fingerprint information
-```
-
-The intended security property is:
-
-> Even if Nunchuk's entire inheritance-backup database is compromised, an attacker cannot recover the Inheritance Key without the separately held Backup Password.
-
----
-
-## 5. High-Level User Flow
-
-### 5.1 Owner Setup
-
-```text
-Owner
-  │
-  ├── creates inheritance plan in Nunchuk
-  │
-  ├── selects hardware wallet as Inheritance Key
-  │
-  ▼
-Hardware Wallet
-  │
-  ├── generates/holds Inheritance Key
-  │
-  ├── generates random Backup Password
-  │
-  ├── creates encrypted backup
-  │
-  ▼
-Encrypted Backup
-  │
-  └──────────────► Nunchuk
-                    │
-                    └── stores ciphertext
-```
-
-The owner separately stores/distributes:
-
-```text
-Backup Password
-      │
-      └──► Beneficiary / Trustee
-```
-
-### 5.2 Claim Flow
-
-After the inheritance activation condition is satisfied:
-
-```text
-Beneficiary
-    │
-    ├── Magic Phrase / inheritance identifier
-    │
-    ▼
-Nunchuk
-    │
-    ├── finds inheritance plan
-    ├── verifies claim eligibility
-    │
-    ▼
-Encrypted Backup
-    │
-    └── downloaded by beneficiary
-             │
-             │ Backup Password
-             ▼
-        Decrypt locally
-             │
-             ▼
-       Inheritance Key
-             │
-             ▼
-       Sign inheritance TX
-             │
-             +
-        Nunchuk Platform Key
-             │
-             ▼
-       Multisig satisfied
-             │
-             ▼
-          Bitcoin
-```
-
-The Backup Password is **never sent to Nunchuk**.
-
----
-
-## 6. Required Hardware Wallet Capability
-
-A compatible hardware wallet MUST provide a mechanism equivalent to:
+A compatible device MUST expose the equivalent of:
 
 ```text
 create_inheritance_backup()
 ```
 
-The operation MUST happen inside the trusted hardware environment.
-
-Conceptually:
-
-```text
-Hardware Wallet
-
-Private Key
-     │
-     ├── generate random Backup Password
-     │
-     └── encrypt backup
-             │
-             ▼
-      Encrypted Backup
-```
-
-The device then exposes the encrypted backup to the host application.
-
-The private key itself MUST NOT be exported as part of this operation.
+This MUST run in the trusted hardware environment: generate a random Backup Password, encrypt the Inheritance Key backup on-device, and return only ciphertext (plus metadata) to the host. The private key MUST NOT be exported as part of this operation.
 
 ---
 
-## 7. Backup Password Requirements
+## 5. Backup Password Requirements
 
-The hardware wallet SHOULD generate the Backup Password using its hardware RNG / secure random source.
+The hardware wallet SHOULD generate the Backup Password with its hardware RNG / secure random source.
 
 The password SHOULD be:
 
 - randomly generated;
-- independent of the wallet seed;
-- independent of the device PIN;
-- independent of the Inheritance Key;
-- sufficiently high entropy to resist offline guessing.
+- independent of the wallet seed, device PIN, and Inheritance Key;
+- high enough entropy to resist offline guessing.
 
-COLDCARD's implementation is the reference example: it generates a random 12-word Backup Password on-device and uses it to protect the encrypted backup. See [References](#references).
+### User-friendly format (strongly recommended)
 
-The hardware vendor MAY use a different password representation, provided that:
+Heirs are often non-technical and may need to handle the Backup Password years later. The Backup Password SHOULD therefore use a **human-friendly encoding**, ideally a **word mnemonic similar to BIP39** (e.g. a random 12-word phrase), so it is easy to write down, read aloud, and enter without transcription errors.
 
-1. it has sufficient entropy;
-2. the user can reliably record it;
-3. the beneficiary can use it for recovery;
-4. Nunchuk never receives it.
+The password need not be a BIP39 *seed* for a wallet — only a BIP39-*like* word encoding of high-entropy material is required.
 
----
+COLDCARD's random 12-word on-device Backup Password is the reference pattern. See [References](#references).
 
-## 8. Encrypted Backup Requirements
-
-The hardware wallet MUST generate the encrypted backup **locally**.
-
-The backup MUST provide:
-
-### Confidentiality
-
-Without the Backup Password, the private key cannot be recovered.
-
-### Integrity
-
-Modification/corruption of the encrypted backup MUST be detectable.
-
-### Portability
-
-The backup SHOULD NOT require the original hardware device to decrypt once the beneficiary has the Backup Password.
-
-### Versioning
-
-The format MUST identify its version so future implementations can support migrations.
-
-### Deterministic recovery
-
-Given:
-
-```text
-Encrypted Backup
-+
-Backup Password
-```
-
-the beneficiary SHOULD be able to recover the same Inheritance Key.
+Vendors MAY use another representation if it has sufficient entropy, can be reliably recorded and entered by a non-technical beneficiary, and is never sent to Nunchuk.
 
 ---
 
-## 9. Backup Contents
+## 6. Encrypted Backup Requirements
 
-The encrypted backup SHOULD contain sufficient information to reconstruct the Inheritance Key.
+The backup MUST be generated **locally** on the device and MUST provide:
 
-At minimum:
+| Property | Requirement |
+| --- | --- |
+| **Confidentiality** | Without the Backup Password, the private key cannot be recovered |
+| **Integrity** | Tampering or corruption MUST be detectable |
+| **Portability** | SHOULD NOT require the original device once the Backup Password is known |
+| **Versioning** | Format MUST identify its version |
+| **Deterministic recovery** | Same ciphertext + password → same Inheritance Key |
+
+### Contents
+
+At minimum, enough to reconstruct the Inheritance Key:
 
 ```text
 Private key / seed material
@@ -321,40 +146,23 @@ Key type
 Key origin / derivation information, if applicable
 ```
 
-The backup MAY contain additional device-specific metadata.
-
-The exact backup format is hardware-vendor-specific.
-
-Nunchuk does **not** require hardware vendors to use the same internal backup format.
-
-For example, COLDCARD currently uses an encrypted 7z backup with AES-256-CBC. See [References](#references).
-
-The important interoperability requirement is the behavior, not necessarily the file format.
+Additional device metadata is allowed. The internal format is vendor-specific (e.g. COLDCARD uses encrypted 7z / AES-256-CBC). Nunchuk requires the **behavior**, not a shared file format.
 
 ---
 
-## 10. Required Interface Between Hardware Wallet and Nunchuk
-
-The integration SHOULD expose the following logical information.
+## 7. Interface
 
 ### Create backup
 
 ```text
-create_inheritance_backup()
+create_inheritance_backup() → encrypted_backup, backup_metadata
 ```
 
-Returns:
-
-```text
-encrypted_backup
-backup_metadata
-```
-
-The Backup Password is displayed/provided to the owner separately and MUST NOT be returned to Nunchuk.
+The Backup Password is shown to the owner on the device (or equivalent secure channel) and MUST NOT be returned to Nunchuk.
 
 ### Backup metadata
 
-Recommended metadata:
+Recommended fields:
 
 ```text
 backup_version
@@ -364,7 +172,7 @@ public_key
 derivation_path / key origin
 ```
 
-Example (logical payload returned to Nunchuk; fields may be nested or flattened):
+Example logical payload:
 
 ```json
 {
@@ -377,369 +185,93 @@ Example (logical payload returned to Nunchuk; fields may be nested or flattened)
 }
 ```
 
-The exact serialization is implementation-specific.
+Serialization is implementation-specific.
+
+### Key identity
+
+The device SHOULD expose a stable fingerprint and preferably the public key so Nunchuk can bind the backup to the registered Inheritance Key. After recovery, the key MUST match that registration.
 
 ---
 
-## 11. Critical Security Requirements
+## 8. Critical Security Rule
 
-The following flow is **NOT acceptable**:
+**Not acceptable:** export plaintext private key to Nunchuk for Nunchuk to encrypt.
 
-```text
-Hardware
-   │
-   ▼
-Plaintext Private Key
-   │
-   ▼
-Nunchuk
-   │
-   ▼
-Nunchuk encrypts it
-```
-
-The following flow is required:
+**Required:** encrypt inside hardware; only ciphertext leaves the device; Backup Password never goes to Nunchuk.
 
 ```text
-Hardware
-   │
-   ├── Private Key
-   │
-   ├── Backup Password
-   │
-   ▼
-Encrypt inside hardware
-   │
-   ▼
-Encrypted Backup
-   │
-   ▼
-Nunchuk
+Hardware (Private Key + Backup Password) → Encrypted Backup → Nunchuk
+Beneficiary decrypts locally with Backup Password → Inheritance Key
 ```
-
-This distinction is fundamental to the protocol.
-
-The following MUST NOT occur at any point:
-
-```text
-Backup Password → Nunchuk
-```
-
-The complete claim can be performed as:
-
-```text
-Nunchuk
-  │
-  ├── provides encrypted backup
-  │
-  ▼
-Beneficiary device
-  │
-  ├── receives Backup Password
-  │
-  ├── decrypts backup locally
-  │
-  ▼
-Inheritance Key
-```
-
-This means Nunchuk can provide cloud storage for the encrypted backup without becoming a custodian of the Inheritance Key.
 
 ---
 
-## 12. User Experience Requirements
+## 9. UX and Verification
 
-The hardware-wallet UI SHOULD make the security boundary clear.
+The device UI SHOULD state clearly that encryption and password generation happen on-device, and that Nunchuk receives only the ciphertext. The owner SHOULD confirm they have recorded the Backup Password before finishing.
 
-Example:
-
-```text
-Create Inheritance Backup?
-
-This backup allows your beneficiary to recover
-your Inheritance Key.
-
-The backup will be encrypted on this device.
-
-Your Backup Password will be generated on this device.
-
-Nunchuk will receive only the encrypted backup.
-
-[Continue]
-```
-
-Then:
-
-```text
-BACKUP PASSWORD
-
-word1 word2 word3 ...
-...
-
-Write these words down.
-
-This password is required to recover
-your Inheritance Key.
-
-Nunchuk will never receive this password.
-```
-
-The user SHOULD be required to confirm the password has been recorded.
+The device SHOULD support backup verification (re-enter password, decrypt/check internally, confirm validity) so failures are found at setup time, not years later during a claim.
 
 ---
 
-## 13. Backup Verification
+## 10. Recovery Models
 
-The hardware device SHOULD provide a way to verify that the encrypted backup can be recovered.
+| Model | Description |
+| --- | --- |
+| **A — Software** | Beneficiary decrypts with Backup Password on a software wallet (simplest for inheritance) |
+| **B — Hardware** | Beneficiary restores into a compatible hardware device (stronger isolation) |
 
-For example:
-
-```text
-Verify Backup
-      │
-      ▼
-Enter / confirm Backup Password
-      │
-      ▼
-Decrypt / verify internally
-      │
-      ▼
-✓ Backup is valid
-```
-
-This reduces the risk of a beneficiary discovering years later that the backup was never correctly created.
-
-COLDCARD provides backup verification functionality as part of its encrypted-backup workflow. See [References](#references).
+Formats SHOULD support both where practical; this is vendor-specific.
 
 ---
 
-## 14. Key Identity Verification
-
-Nunchuk needs to know which key the encrypted backup represents.
-
-The hardware wallet SHOULD expose a stable identifier such as:
-
-```text
-key fingerprint
-```
-
-and preferably:
-
-```text
-public key
-```
-
-Nunchuk uses this to verify:
-
-```text
-Encrypted Backup
-        ↓
-Recovered Key
-        ↓
-Expected Inheritance Key
-```
-
-The recovered key MUST match the key originally registered as the Inheritance Key.
-
-This prevents accidental use of the wrong backup.
-
----
-
-## 15. Recovery Flow on Hardware / Software
-
-There are two possible models.
-
-### Model A — Software recovery
-
-The beneficiary decrypts the backup using the Backup Password and obtains the Inheritance Key on a software wallet.
-
-This is the simplest model for inheritance.
-
-### Model B — Hardware recovery
-
-The beneficiary imports/restores the backup into a compatible hardware device.
-
-This provides stronger key isolation.
-
-The backup format SHOULD preferably support both models, although this is ultimately hardware-vendor-specific.
-
----
-
-## 16. Requirements Checklist
+## 11. Requirements Checklist
 
 ### Required
 
-1. **On-device encrypted backup generation**
-2. **Hardware-generated random Backup Password**
-3. **Encrypted backup export**
-4. **No plaintext private-key export during backup creation**
-5. **Recovery using Backup Password**
-6. **Stable key fingerprint/public-key identification**
-7. **Versioned backup format**
-8. **Integrity/authentication protection**
-9. **Documented backup/recovery API or integration mechanism**
+1. On-device encrypted backup generation  
+2. Hardware-generated random Backup Password  
+3. Encrypted backup export  
+4. No plaintext private-key export during backup creation  
+5. Recovery using Backup Password  
+6. Stable key fingerprint / public-key identification  
+7. Versioned backup format  
+8. Integrity / authentication protection  
+9. Documented backup / recovery API or integration path  
 
 ### Strongly recommended
 
-10. Backup verification
-11. Human-readable Backup Password
-12. Portable recovery format
-13. Ability to recover without the original device
-14. Documentation of the cryptographic construction
-15. Backward compatibility/version migration
+10. Backup verification  
+11. User-friendly Backup Password (BIP39-like mnemonic) for non-technical heirs  
+12. Portable recovery without the original device  
+13. Documented cryptographic construction  
+14. Backward compatibility / version migration  
 
 ### Out of scope for the hardware wallet
 
-The hardware wallet does NOT need to:
+Inheritance policy, beneficiary identity, activation date, Nunchuk servers, Platform Key custody, inheritance transaction construction, claim status, and retaining the Backup Password after creation.
 
-- implement Nunchuk's inheritance policy;
-- know the beneficiary;
-- know the activation date;
-- communicate with the Nunchuk inheritance server;
-- hold the Nunchuk Platform Key;
-- perform the inheritance transaction;
-- know whether a claim has been initiated;
-- know the Backup Password after backup creation.
-
-The hardware wallet's responsibility is simply:
-
-> **Securely create and recover an encrypted backup of the designated Inheritance Key.**
-
-Everything related to inheritance orchestration happens outside the hardware wallet.
+Hardware responsibility in one line: **securely create and recover an encrypted backup of the Inheritance Key.**
 
 ---
 
-## 17. Why This Architecture
-
-This separation gives each component a clear responsibility:
-
-```text
-┌──────────────────────┐
-│   Hardware Wallet    │
-│                      │
-│ Private-key custody  │
-│ Backup encryption    │
-│ Backup Password      │
-└──────────┬───────────┘
-           │
-           │ encrypted backup
-           ▼
-┌──────────────────────┐
-│       Nunchuk        │
-│                      │
-│ Backup storage       │
-│ Inheritance policy   │
-│ Claim orchestration  │
-│ Platform signature   │
-└──────────┬───────────┘
-           │
-           │ encrypted backup
-           ▼
-┌──────────────────────┐
-│     Beneficiary      │
-│                      │
-│ Backup Password      │
-│ Backup decryption    │
-│ Inheritance signing  │
-└──────────────────────┘
-```
-
-No single component needs to possess all the information required to compromise the inheritance path.
-
----
-
-## 18. Reference Integration
-
-COLDCARD's encrypted backup functionality is the reference implementation for this integration model.
-
-The important properties we want to reproduce are:
-
-```text
-1. Backup Password generated by hardware
-2. Backup encrypted by hardware
-3. Plaintext key never sent to Nunchuk
-4. Encrypted backup can be exported
-5. Password remains separate from backup
-6. Backup can later be decrypted/recovered
-```
-
-The exact cryptographic/container format does not have to be identical between hardware vendors.
-
-Nunchuk's protocol SHOULD therefore define the **security and behavioral requirements**, while allowing each hardware vendor to retain its own secure backup format.
-
----
-
-## 19. Glossary
+## 12. Glossary
 
 | Term | Meaning |
 | --- | --- |
-| **Inheritance Key** | The designated multisig cosigner key reserved for the inheritance path. |
-| **Backup Password** | High-entropy secret generated on the hardware wallet; used to decrypt the encrypted backup. Never sent to Nunchuk. |
-| **Encrypted Backup** | Ciphertext produced on-device that contains material needed to recover the Inheritance Key. |
-| **Platform Key** | Nunchuk-controlled cosigner key used to help satisfy the multisig policy when a claim is eligible. |
-| **Magic Phrase** | Inheritance identifier the beneficiary uses to locate and start an inheritance claim in Nunchuk. |
-| **Trustee** | Optional party who may hold or convey the Backup Password on behalf of the beneficiary. |
-| **Owner** | Party who creates the inheritance plan and registers the Inheritance Key. |
-| **Beneficiary** | Party entitled to claim and spend via the inheritance path after activation conditions are met. |
-
----
-
-## 20. Summary
-
-### User experience
-
-```text
-Owner
-  ↓
-Create inheritance plan
-  ↓
-Create encrypted backup on hardware
-  ↓
-Upload encrypted backup to Nunchuk
-  ↓
-Give Backup Password to beneficiary
-  ↓
-[time / inheritance condition]
-  ↓
-Beneficiary starts claim
-  ↓
-Downloads encrypted backup
-  ↓
-Decrypts locally with Backup Password
-  ↓
-Recovers Inheritance Key
-  ↓
-Signs transaction
-  ↓
-Nunchuk provides Platform signature
-  ↓
-Bitcoin transaction
-```
-
-### Hardware wallet requirement
-
-> **Provide a secure, on-device encrypted backup mechanism for the designated Inheritance Key, with a hardware-generated high-entropy Backup Password that is never exposed to Nunchuk.**
-
-### Core security property
-
-```text
-Nunchuk has:
-    ✓ encrypted backup
-    ✓ public key / fingerprint
-    ✓ inheritance metadata
-
-Nunchuk does NOT have:
-    ✗ private key
-    ✗ seed
-    ✗ Backup Password
-    ✗ encryption key
-```
-
-This is the required foundation for integrating a hardware wallet into Nunchuk's off-chain inheritance protocol.
+| **Inheritance Key** | Multisig cosigner reserved for the inheritance path |
+| **Backup Password** | On-device high-entropy secret that decrypts the backup; never sent to Nunchuk |
+| **Encrypted Backup** | On-device ciphertext needed to recover the Inheritance Key |
+| **Platform Key** | Nunchuk cosigner used when a claim is eligible |
+| **Magic Phrase** | Identifier used to locate / start a claim in Nunchuk |
+| **Trustee** | Optional holder/conveyor of the Backup Password for the beneficiary |
+| **Owner** | Creates the plan and registers the Inheritance Key |
+| **Beneficiary** | Claims and spends after activation conditions are met |
 
 ---
 
 ## References
 
 - [COLDCARD encrypted backups](https://coldcard.com/docs/backups/)
-- [RFC 2119 — Key words for use in RFCs to Indicate Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)
+- [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119)
+- [BIP39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
