@@ -243,9 +243,10 @@ Formats SHOULD support both where practical; this is vendor-specific.
 
 10. Backup verification  
 11. User-friendly Backup Password (BIP39-like mnemonic) for non-technical heirs  
-12. Portable recovery without the original device  
-13. Documented cryptographic construction  
-14. Backward compatibility / version migration  
+12. Minimum **128 bits** of security for the Backup Password / encryption construction  
+13. Portable recovery without the original device  
+14. Documented cryptographic construction  
+15. Backward compatibility / version migration  
 
 ### Out of scope for the hardware wallet
 
