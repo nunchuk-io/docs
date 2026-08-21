@@ -4,46 +4,60 @@
 
 [Release key](https://keyserver.ubuntu.com/pks/lookup?search=0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525&fingerprint=on&op=index)
 
-Release signatures are attached to each release at https://github.com/nunchuk-io/nunchuk-desktop/releases.
+Release signatures are attached to each [Nunchuk Desktop release](https://github.com/nunchuk-io/nunchuk-desktop/releases).
 
-## Verifying builds
+## Verifying release signatures
 
 Follow these steps:
 
-1. Download the app for your OS (.zip) and the signature file (.asc) into the same directory, then open the Command Line and `cd` into the directory.
-2. Import the public key of our signer. The signing key can be found above. 
+1. Download the app file for your operating system and `SHA256SUMS.asc` to the same directory. Open a terminal (or Command Prompt on Windows) and change to that directory.
+2. Import the signer's public key:
 
-    `gpg --keyserver keyserver.ubuntu.com --recv-keys 0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525`
+   ```shell
+   gpg --keyserver keyserver.ubuntu.com --recv-keys 0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525
+   ```
 
-3. Verify the checksum (for Linux and MacOS)
+3. Verify the checksums:
 
-    `sha256sum --check SHA256SUMS.asc`
+   **Linux and macOS**
 
-The output should say "OK" if the checksum is valid for the given file (if you only download the app for one OS, ignore the warnings for the other OSes).
+   ```shell
+   sha256sum --check SHA256SUMS.asc
+   ```
 
-- If you are on Windows, run:
-    
-    `certUtil -hashfile <downloaded zip file> SHA256`
+   The output should include `OK` for the downloaded app. If you downloaded the app for only one operating system, ignore warnings about files for the other operating systems.
 
-The output should be the file hash in SHA256SUMS.asc 
+   **Windows**
 
-4. Verify the signature
+   ```powershell
+   certUtil -hashfile "<downloaded app file>" SHA256
+   ```
 
-    `gpg --verify SHA256SUMS.asc`
+   The output should match the file's SHA-256 hash in `SHA256SUMS.asc`.
 
-The output should say "Good signature" from our signer.
+4. Verify the signature:
 
-## Linux
+   ```shell
+   gpg --verify SHA256SUMS.asc
+   ```
 
-On Linux, you will need to install udev rules for the devices to be reachable by [HWI](https://github.com/bitcoin-core/HWI). Get the rules from HWI then run the following command: 
+   The output should report a `Good signature` from the signer. Do not continue if the signature cannot be verified.
 
-```Shell
-cd hwilib/; \
+## Reproducing builds
+
+To reproduce the Linux build and compare it byte for byte with the official release, follow the [Reproducible Builds Guide](https://github.com/nunchuk-io/nunchuk-desktop/blob/main/reproducible-builds/README.md).
+
+## Linux device rules
+
+On Linux, install udev rules so that [HWI](https://github.com/bitcoin-core/HWI) can detect supported hardware devices. Download the rules from HWI and then run the following commands:
+
+```shell
+cd hwilib/ && \
   sudo cp udev/*.rules /etc/udev/rules.d/ && \
   sudo udevadm trigger && \
-  sudo udevadm control --reload-rules  && \
+  sudo udevadm control --reload-rules && \
   sudo groupadd plugdev && \
-  sudo usermod -aG plugdev `whoami`
+  sudo usermod -aG plugdev "$(whoami)"
 ```
 
-Visit [here](https://github.com/bitcoin-core/HWI/tree/master/hwilib/udev) for more information.
+See [HWI's udev documentation](https://github.com/bitcoin-core/HWI/tree/master/hwilib/udev) for more information.
