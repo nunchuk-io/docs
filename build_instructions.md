@@ -29,7 +29,7 @@ The output should be the file hash in SHA256SUMS.asc
 
 4. Verify the signature
 
-    `gpg --verify SHA256SUMS.asc`
+    `gpg --verify SHA256SUMS.asc SHA256SUMS`
 
 The output should say "Good signature" from our signer.
 
