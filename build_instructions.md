@@ -10,7 +10,7 @@ Release signatures are attached to each [Nunchuk Desktop release](https://github
 
 Follow these steps:
 
-1. Download the app file for your operating system and `SHA256SUMS.asc` to the same directory. Open a terminal (or Command Prompt on Windows) and change to that directory.
+1. Download the app file for your operating system, `SHA256SUMS`, and `SHA256SUMS.asc` to the same directory. Open a terminal (or Command Prompt on Windows) and change to that directory.
 2. Import the signer's public key:
 
    ```shell
@@ -22,7 +22,7 @@ Follow these steps:
    **Linux and macOS**
 
    ```shell
-   sha256sum --check SHA256SUMS.asc
+   sha256sum --check SHA256SUMS
    ```
 
    The output should include `OK` for the downloaded app. If you downloaded the app for only one operating system, ignore warnings about files for the other operating systems.
@@ -33,12 +33,12 @@ Follow these steps:
    certUtil -hashfile "<downloaded app file>" SHA256
    ```
 
-   The output should match the file's SHA-256 hash in `SHA256SUMS.asc`.
+   The output should match the file's SHA-256 hash in `SHA256SUMS`.
 
 4. Verify the signature:
 
    ```shell
-   gpg --verify SHA256SUMS.asc
+   gpg --verify SHA256SUMS.asc SHA256SUMS
    ```
 
    The output should report a `Good signature` from the signer. Do not continue if the signature cannot be verified.
