@@ -45,7 +45,7 @@ Follow these steps:
 
 ## Reproducing builds
 
-To reproduce the Linux build and compare it byte for byte with the official release, follow the [Reproducible Builds Guide](https://github.com/nunchuk-io/nunchuk-desktop/blob/main/reproducible-builds/README.md).
+To reproduce a build and compare it byte for byte with the official release, follow the [Reproducible Builds Guide](https://github.com/nunchuk-io/nunchuk-desktop/blob/main/reproducible-builds/README.md) for supported platforms and instructions.
 
 ## Linux device rules
 
