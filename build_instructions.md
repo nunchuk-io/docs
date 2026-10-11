@@ -10,30 +10,46 @@ Release signatures are attached to each [Nunchuk Desktop release](https://github
 
 Follow these steps:
 
-1. Download the app file for your operating system, `SHA256SUMS`, and `SHA256SUMS.asc` to the same directory. Open a terminal (or Command Prompt on Windows) and change to that directory.
+1. Download the app file for your operating system, `SHA256SUMS`, and `SHA256SUMS.asc` from the same release to the same directory. Open a terminal (or Command Prompt on Windows) and change to that directory.
 2. Import the signer's public key:
 
    ```shell
    gpg --keyserver keyserver.ubuntu.com --recv-keys 0x8C8ECD3F660CA53CD878792A6E38A462ED2EF525
    ```
 
+   Confirm that GPG reports the key was imported, updated, or unchanged.
+
 3. Verify the checksums:
 
-   **Linux and macOS**
+   **Linux**
 
    ```shell
-   sha256sum --check SHA256SUMS
+   sha256sum --check --ignore-missing SHA256SUMS
    ```
 
-   The output should include `OK` for the downloaded app. If you downloaded the app for only one operating system, ignore warnings about files for the other operating systems.
+   **macOS**
+
+   ```shell
+   shasum -a 256 --ignore-missing --check SHA256SUMS
+   ```
+
+   Confirm that the output shows `OK` after the name of the app file you downloaded.
 
    **Windows**
+
+   Replace `<downloaded app file>` with the name of the file you downloaded:
 
    ```powershell
    certUtil -hashfile "<downloaded app file>" SHA256
    ```
 
-   The output should match the file's SHA-256 hash in `SHA256SUMS`.
+   Display the expected checksums:
+
+   ```powershell
+   type SHA256SUMS
+   ```
+
+   Confirm that the entire SHA-256 hash from `certUtil` matches the entry for your downloaded file in `SHA256SUMS`.
 
 4. Verify the signature:
 
@@ -41,7 +57,15 @@ Follow these steps:
    gpg --verify SHA256SUMS.asc SHA256SUMS
    ```
 
-   The output should report a `Good signature` from the signer. Do not continue if the signature cannot be verified.
+   Confirm that GPG reports a `Good signature` and that the primary key fingerprint matches:
+
+   ```text
+   8C8E CD3F 660C A53C D878  792A 6E38 A462 ED2E F525
+   ```
+
+   GPG may warn that the key is not certified with a trusted signature. This means GPG has not established trust in the key's identity; it does not by itself mean the signature is invalid. Confirm the fingerprint against a trusted Nunchuk source.
+
+   Do not install or run the app unless the checksum, signature, and fingerprint checks all pass.
 
 ## Reproducing builds
 
